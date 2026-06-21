@@ -1,6 +1,6 @@
 # aiset-ecom
 
-一个面向 Claude Code / Codex / OpenClaw 的跨境电商和国内电商通用视觉创作 Skill，集 **AI 生图** 与 **视觉文案设计 SOP** 于一体。
+一个面向 Hermes agent / OpenClaw 的跨境电商和国内电商通用视觉创作 Skill，集 **AI 生图** 与 **视觉文案设计 SOP** 于一体。
 
 与众不同之处是：**Campaign Style Lock** 机制、**强推广**、**重视转化效果**，以及内置**分品类合规规则库**和**用户确认门**，先过合规线，再谈转化率。
 
@@ -41,7 +41,7 @@
 
 ### 前置要求
 
-- [Claude Code CLI / codex等] 已安装并登录
+- [Hermes agent / OpenClaw 等] 已安装并登录
 - Python 3.10+
 - OpenAI 兼容图片生成 API（如 OpenAI、Azure OpenAI 或第三方兼容服务）
 
@@ -70,17 +70,13 @@ IMG_API_KEY=your-api-key-here
 
 也兼容以下环境变量别名：`OPENAI_BASE_URL`、`OPENAI_API_BASE`、`OPENAI_IMAGE_MODEL`、`OPENAI_MODEL`、`OPENAI_API_KEY`。
 
-### 3. 在 Claude Code 中使用
+### 3. 在 OpenClaw 中使用
 
-启动 Claude Code 后，直接用自然语言描述需求即可：
+启动 OpenClaw 后，直接用自然语言描述需求即可：
 
 ```
 基于 data/NEW002.jpg 这款男士白衬衫，生成 Amazon 详情页全套图片
 ```
-![](./微信图片_20260507020653_3675_254.png)
-
-![](./ScreenShot_2026-05-07_020427_301.png)
-
 
 ```
 用 data/NEW003.jpg 生成 3 张 Twitter/X 推广帖子
@@ -89,6 +85,81 @@ IMG_API_KEY=your-api-key-here
 ```
 基于 data/NEW004.jpg 生成电商直播间场景图
 ```
+
+### 4. 在 Hermes Agent 上使用
+
+Hermes Agent（[hermes-agent.nousresearch.com](https://hermes-agent.nousresearch.com)）原生支持 SKILL.md 格式，可以直接加载本项目的 Skill。
+
+#### 方法一：复制到 Hermes 技能目录（推荐）
+
+```bash
+# macOS / Linux
+mkdir -p ~/.hermes/skills/ecom
+cp -r .hermes/skills/aiset-ecom ~/.hermes/skills/ecom/
+```
+
+```powershell
+# Windows PowerShell
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.hermes\skills\ecom"
+Copy-Item -Recurse ".hermes\skills\aiset-ecom" "$env:USERPROFILE\.hermes\skills\ecom\"
+```
+
+复制后，Hermes 会自动发现该 Skill，可直接用斜杠命令调用：
+
+```
+/aiset-ecom 基于 data/你的产品.jpg 生成 Amazon 详情页全套图片
+```
+
+或自然语言对话：
+
+```
+帮我把这个普通食品做一套电商主图文案方案，先提炼合规必卖理由，等我确认后再继续
+```
+
+#### 方法二：配置外部技能目录（多工具共享）
+
+如果你希望多个 AI 工具（OpenClaw、Hermes）共用同一套 Skill，无需复制，直接在 `~/.hermes/config.yaml` 中添加本项目路径：
+
+```yaml
+# ~/.hermes/config.yaml
+skills:
+  external_dirs:
+    - /你的项目路径/aiset-ecom/.hermes/skills
+```
+
+```yaml
+# Windows 示例
+skills:
+  external_dirs:
+    - C:/Proj/aiset-ecom/.hermes/skills
+```
+
+外部目录为只读扫描，Hermes 不会修改项目内的 Skill 文件。
+
+#### 配置 API 密钥
+
+Hermes 会在首次加载 Skill 时提示配置。也可以提前写入 `~/.hermes/.env`：
+
+```dotenv
+IMG_BASE_URL=https://api.apimart.ai/v1
+IMG_MODEL=gpt-image-2
+IMG_API_KEY=your-api-key-here
+```
+
+#### Hermes 使用示例
+
+```
+# AI 生图
+/aiset-ecom 基于 data/product.jpg 生成 5 张 Amazon 主图，直播间场景风格
+
+# 视觉文案 SOP（触发合规审查模式）
+/aiset-ecom 产品：松花粉固体饮料，普通食品，帮我提炼合规必卖理由
+
+# 合规审查
+/aiset-ecom 这段运动器材文案合规吗？修复驼背、缓解腰背痛、矫正脊柱
+```
+
+> Hermes 技能加载采用渐进式披露，只在需要时才读取完整 SKILL.md，对 token 消耗友好。
 
 ## 使用示例
 
@@ -136,12 +207,12 @@ IMG_API_KEY=your-api-key-here
 
 ```bash
 # 直接传入 Prompt
-python3 .claude/skills/aiset-ecom/scripts/generate_image.py \
+python3 .hermes/skills/aiset-ecom/scripts/generate_image.py \
   --prompt "clean product hero image, white background, studio lighting" \
   --size 1024x1024
 
 # 从文件读取 Prompt，附带产品参考图
-python3 .claude/skills/aiset-ecom/scripts/generate_image.py \
+python3 .hermes/skills/aiset-ecom/scripts/generate_image.py \
   --prompt-file my-prompt.txt \
   --image data/product.jpg \
   --output-dir generated-images \
@@ -208,7 +279,7 @@ Skill 会：
 
 ```
 aiset-ecom/
-├── .claude/
+├── .hermes/
 │   └── skills/
 │       └── aiset-ecom/                # 核心技能模块
 │           ├── SKILL.md               # Skill 定义和执行规则（含视觉文案 SOP）
@@ -350,5 +421,4 @@ MIT License
 
 ## 致谢
 
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — AI 编程助手
 - OpenAI Images 2 API — 图片生成接口标准
